@@ -1,0 +1,187 @@
+// Vitality Bulking Fitness PWA - Prisma Schema
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum MembershipType {
+  STANDARD
+  GOLD
+  PLATINUM
+}
+
+enum FitnessPhase {
+  LEAN_BULKING
+  BULKING
+  CUTTING
+  MAINTENANCE
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+  PRE_WORKOUT
+  POST_WORKOUT
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+// ============================================================
+// USER & PROFILE
+// ============================================================
+
+model User {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  name           String
+  avatarUrl      String?
+  membershipType MembershipType @default(STANDARD)
+  joinedAt       DateTime       @default(now())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  profile         UserProfile?
+  dailyTarget     DailyTarget?
+  bodyScanLogs    BodyScanLog[]
+  foodLogs        FoodLog[]
+  aiConversations AIConversation[]
+}
+
+/// Data fisik & tujuan fitness pengguna
+model UserProfile {
+  id            String       @id @default(cuid())
+  userId        String       @unique
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  height        Float?       // cm
+  currentWeight Float?       // kg
+  goalWeight    Float?       // kg
+  currentPhase  FitnessPhase @default(LEAN_BULKING)
+  streak        Int          @default(0)
+  updatedAt     DateTime     @updatedAt
+}
+
+// ============================================================
+// NUTRITION TARGETS
+// ============================================================
+
+/// Target nutrisi harian — dari screen Profile (Daily Targets) & Dashboard (Calories Remaining)
+model DailyTarget {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calories  Int      // kcal — e.g. 3200
+  protein   Float    // g   — e.g. 185
+  carbs     Float    // g   — e.g. 420
+  fat       Float    // g
+  fiber     Float?   // g   — dari Dashboard "Nutrient Density"
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================
+// BODY SCAN LOGS
+// ============================================================
+
+/// Entri hasil scan timbangan/receipt — dari screen Body Scan
+model BodyScanLog {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date            DateTime @default(now())
+  weight          Float    // kg
+  bodyFatPercent  Float?   // %
+  muscleMass      Float?   // kg
+  bmi             Float?
+  receiptImageUrl String?
+  createdAt       DateTime @default(now())
+
+  @@index([userId, date])
+}
+
+// ============================================================
+// FOOD LOGS
+// ============================================================
+
+/// Log makanan per sesi makan — dari screen Food Scan & Dashboard
+model FoodLog {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime    @default(now())
+  mealType  MealType?
+  entries   FoodEntry[]
+  createdAt DateTime    @default(now())
+
+  @@index([userId, date])
+}
+
+/// Tiap bahan/item makanan dalam satu FoodLog
+model FoodEntry {
+  id          String   @id @default(cuid())
+  foodLogId   String
+  foodLog     FoodLog  @relation(fields: [foodLogId], references: [id], onDelete: Cascade)
+  name        String   // e.g. "Grilled Salmon"
+  weightGrams Float    // e.g. 150
+  quantity    Float    @default(1)
+  calories    Float    // kcal — e.g. 312
+  protein     Float    // g
+  carbs       Float    // g
+  fat         Float    // g
+  fiber       Float?   // g  — Nutrient Density dashboard
+  omega3      Float?   // g  — Nutrient Density dashboard
+  iron        Float?   // mg — Nutrient Density dashboard
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+}
+
+// ============================================================
+// AI CHAT
+// ============================================================
+
+/// Satu sesi percakapan dengan Vitality AI
+model AIConversation {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  AIMessage[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+/// Pesan individual dalam satu sesi AI
+model AIMessage {
+  id              String               @id @default(cuid())
+  conversationId  String
+  conversation    AIConversation       @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            MessageRole
+  content         String               @db.Text
+  recommendations MealRecommendation[]
+  createdAt       DateTime             @default(now())
+}
+
+/// Rekomendasi meal yang disematkan dalam pesan AI
+model MealRecommendation {
+  id          String    @id @default(cuid())
+  messageId   String
+  message     AIMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  name        String    // e.g. "Rotisserie & Quinoa Bowl"
+  calories    Float     // e.g. 750
+  protein     Float     // g — e.g. 55
+  description String?
+  ingredients Json      // [{ name, weightGrams, calories }]
+  createdAt   DateTime  @default(now())
+}
