@@ -1,5 +1,5 @@
 import { streamText } from "ai";
-import { google } from "@ai-sdk/google";
+import { openai } from "@ai-sdk/openai";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -43,7 +43,7 @@ User profile:
 Keep responses concise and practical. Use metric units. When suggesting meals, include macros (calories, protein, carbs, fat). Always be encouraging and science-based.`;
 
   const result = streamText({
-    model: google("gemini-2.0-flash-lite"),
+    model: openai("gpt-4o-mini"),
     system: systemPrompt,
     messages,
   });

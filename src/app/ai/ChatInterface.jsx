@@ -114,7 +114,7 @@ export default function ChatInterface({ userName, phase, calorieTarget }) {
           />
           <button
             type="submit"
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || !input?.trim()}
             className="w-10 h-10 rounded-full bg-stone-900 text-white flex items-center justify-center transition-all active:scale-90 shadow-md disabled:opacity-40"
           >
             <span

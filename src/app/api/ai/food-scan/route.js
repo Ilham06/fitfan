@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
@@ -44,7 +44,7 @@ export async function POST(req) {
     const mimeType = imageFile.type || "image/jpeg";
 
     const { object } = await generateObject({
-      model: google("gemini-2.0-flash-lite"),
+      model: openai("gpt-4o-mini"),
       schema: FoodAnalysisSchema,
       messages: [
         {
