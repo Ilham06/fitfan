@@ -10,7 +10,6 @@ export async function saveFoodLog(data) {
   if (!session) redirect("/login");
 
   const userId = session.user.id;
-
   const { mealType, entries } = data;
 
   if (!entries || entries.length === 0) {
@@ -41,6 +40,52 @@ export async function saveFoodLog(data) {
       },
     },
   });
+
+  return { success: true };
+}
+
+export async function deleteFoodLog(logId) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) redirect("/login");
+
+  const userId = session.user.id;
+
+  const log = await prisma.foodLog.findUnique({ where: { id: logId } });
+  if (!log || log.userId !== userId) {
+    return { error: "Log tidak ditemukan." };
+  }
+
+  await prisma.foodLog.delete({ where: { id: logId } });
+  return { success: true };
+}
+
+export async function updateWeightAndTargets({ weight, applyProtein, proteinGrams }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) redirect("/login");
+
+  const userId = session.user.id;
+  const kg = parseFloat(weight);
+  if (!kg || kg < 20 || kg > 300) {
+    return { error: "Berat badan tidak valid." };
+  }
+
+  await prisma.userProfile.upsert({
+    where: { userId },
+    update: { currentWeight: kg },
+    create: { userId, currentWeight: kg },
+  });
+
+  if (applyProtein && proteinGrams) {
+    const protein = parseFloat(proteinGrams);
+    const existing = await prisma.dailyTarget.findUnique({ where: { userId } });
+    if (existing) {
+      await prisma.dailyTarget.update({ where: { userId }, data: { protein } });
+    } else {
+      await prisma.dailyTarget.create({
+        data: { userId, calories: 2500, protein, carbs: 300, fat: 70 },
+      });
+    }
+  }
 
   return { success: true };
 }
