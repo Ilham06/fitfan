@@ -152,18 +152,26 @@ export default function FoodLogForm({ todayLogs = [] }) {
         return;
       }
       setAiConfidence(data.confidence);
+      const toFoodRef = (cal, prot, carb, f, fib, grams) => {
+        const ratio = 100 / (grams || 100);
+        return { calories: cal * ratio, protein: prot * ratio, carbs: carb * ratio, fat: f * ratio, fiber: (fib || 0) * ratio };
+      };
       const aiEntries = data.ingredients?.length
-        ? data.ingredients.map((ing) => ({
-            name: ing.name,
-            weightGrams: String(ing.weightGrams || 100),
-            quantity: "1",
-            calories: String(ing.calories || 0),
-            protein: String(ing.protein || 0),
-            carbs: String(ing.carbs || 0),
-            fat: String(ing.fat || 0),
-            fiber: "",
-            _foodRef: null,
-          }))
+        ? data.ingredients.map((ing) => {
+            const g = ing.weightGrams || 100;
+            const ref = toFoodRef(ing.calories || 0, ing.protein || 0, ing.carbs || 0, ing.fat || 0, 0, g);
+            return {
+              name: ing.name,
+              weightGrams: String(g),
+              quantity: "1",
+              calories: String(ing.calories || 0),
+              protein: String(ing.protein || 0),
+              carbs: String(ing.carbs || 0),
+              fat: String(ing.fat || 0),
+              fiber: "",
+              _foodRef: ref,
+            };
+          })
         : [
             {
               name: data.name || "Scanned Food",
@@ -174,7 +182,7 @@ export default function FoodLogForm({ todayLogs = [] }) {
               carbs: String(data.totalCarbs || 0),
               fat: String(data.totalFat || 0),
               fiber: data.totalFiber ? String(data.totalFiber) : "",
-              _foodRef: null,
+              _foodRef: toFoodRef(data.totalCalories || 0, data.totalProtein || 0, data.totalCarbs || 0, data.totalFat || 0, data.totalFiber || 0, 100),
             },
           ];
       setEntries(aiEntries);
@@ -388,8 +396,8 @@ export default function FoodLogForm({ todayLogs = [] }) {
                 )}
               </div>
 
-              {/* Weight input for manual mode */}
-              {mode === "manual" && entry.name && (
+              {/* Weight input — both modes */}
+              {entry.name && (
                 <div className="flex items-center gap-3 bg-stone-50 rounded-xl px-3 py-2">
                   <span className="material-symbols-outlined text-stone-400 text-sm">scale</span>
                   <input
@@ -420,9 +428,9 @@ export default function FoodLogForm({ todayLogs = [] }) {
                       value={entry[field]}
                       onChange={(e) => updateEntry(idx, field, e.target.value)}
                       placeholder="0"
-                      readOnly={mode === "manual" && !!entry._foodRef}
+                      readOnly={!!entry._foodRef}
                       className={`w-full text-center bg-transparent border-none focus:outline-none font-black text-base ${color || ""} placeholder-stone-300 ${
-                        mode === "manual" && entry._foodRef ? "cursor-default" : ""
+                        entry._foodRef ? "cursor-default" : ""
                       }`}
                     />
                   </div>
