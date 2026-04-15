@@ -43,6 +43,7 @@ const EMPTY_ENTRY = {
 export default function FoodLogForm({ todayLogs = [] }) {
   const router = useRouter();
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const [mode, setMode] = useState("manual");
   const [mealType, setMealType] = useState("");
@@ -152,18 +153,26 @@ export default function FoodLogForm({ todayLogs = [] }) {
         return;
       }
       setAiConfidence(data.confidence);
+      const toFoodRef = (cal, prot, carb, f, fib, grams) => {
+        const ratio = 100 / (grams || 100);
+        return { calories: cal * ratio, protein: prot * ratio, carbs: carb * ratio, fat: f * ratio, fiber: (fib || 0) * ratio };
+      };
       const aiEntries = data.ingredients?.length
-        ? data.ingredients.map((ing) => ({
-            name: ing.name,
-            weightGrams: String(ing.weightGrams || 100),
-            quantity: "1",
-            calories: String(ing.calories || 0),
-            protein: String(ing.protein || 0),
-            carbs: String(ing.carbs || 0),
-            fat: String(ing.fat || 0),
-            fiber: "",
-            _foodRef: null,
-          }))
+        ? data.ingredients.map((ing) => {
+            const g = ing.weightGrams || 100;
+            const ref = toFoodRef(ing.calories || 0, ing.protein || 0, ing.carbs || 0, ing.fat || 0, 0, g);
+            return {
+              name: ing.name,
+              weightGrams: String(g),
+              quantity: "1",
+              calories: String(ing.calories || 0),
+              protein: String(ing.protein || 0),
+              carbs: String(ing.carbs || 0),
+              fat: String(ing.fat || 0),
+              fiber: "",
+              _foodRef: ref,
+            };
+          })
         : [
             {
               name: data.name || "Scanned Food",
@@ -174,7 +183,7 @@ export default function FoodLogForm({ todayLogs = [] }) {
               carbs: String(data.totalCarbs || 0),
               fat: String(data.totalFat || 0),
               fiber: data.totalFiber ? String(data.totalFiber) : "",
-              _foodRef: null,
+              _foodRef: toFoodRef(data.totalCalories || 0, data.totalProtein || 0, data.totalCarbs || 0, data.totalFat || 0, data.totalFiber || 0, 100),
             },
           ];
       setEntries(aiEntries);
@@ -276,45 +285,86 @@ export default function FoodLogForm({ todayLogs = [] }) {
       {mode === "scan" && (
         <div>
           <input
-            ref={fileInputRef}
+            ref={cameraInputRef}
             type="file"
             accept="image/*"
             capture="environment"
             className="hidden"
             onChange={handleImageChange}
           />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={scanning}
-            className="w-full relative aspect-[4/3] max-w-[280px] mx-auto block rounded-[2rem] overflow-hidden shadow-xl group"
-          >
-            {previewUrl ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={previewUrl} alt="Food" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="material-symbols-outlined text-white text-3xl">photo_camera</span>
-                </div>
-              </>
-            ) : (
-              <div className="w-full h-full bg-stone-100 flex flex-col items-center justify-center gap-3 group-hover:bg-lime-50 transition-colors">
-                <div className="w-16 h-16 rounded-full bg-lime-100 group-hover:bg-lime-200 flex items-center justify-center transition-colors">
-                  <span className="material-symbols-outlined text-lime-700 text-3xl">
-                    {scanning ? "hourglass_empty" : "camera"}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageChange}
+          />
+
+          {previewUrl ? (
+            <div className="relative aspect-[4/3] max-w-[280px] mx-auto rounded-[2rem] overflow-hidden shadow-xl group">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={previewUrl} alt="Food" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/20 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={scanning}
+                  className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                >
+                  <span className="material-symbols-outlined text-stone-700 text-xl">photo_camera</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={scanning}
+                  className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                >
+                  <span className="material-symbols-outlined text-stone-700 text-xl">photo_library</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 max-w-[320px] mx-auto">
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                disabled={scanning}
+                className="aspect-square rounded-[1.5rem] bg-stone-100 flex flex-col items-center justify-center gap-2.5 group hover:bg-lime-50 active:scale-95 transition-all shadow-sm border border-stone-100"
+              >
+                <div className="w-14 h-14 rounded-full bg-lime-100 group-hover:bg-lime-200 flex items-center justify-center transition-colors">
+                  <span className="material-symbols-outlined text-lime-700 text-2xl">
+                    {scanning ? "hourglass_empty" : "photo_camera"}
                   </span>
                 </div>
-                <p className="text-sm font-bold text-stone-600">
-                  {scanning ? "AI Scanning..." : "Foto Makanan (AI Scan)"}
-                </p>
-              </div>
-            )}
-          </button>
+                <div className="text-center">
+                  <p className="text-xs font-bold text-stone-700">Ambil Foto</p>
+                  <p className="text-[9px] text-stone-400 font-medium">Langsung dari kamera</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={scanning}
+                className="aspect-square rounded-[1.5rem] bg-stone-100 flex flex-col items-center justify-center gap-2.5 group hover:bg-lime-50 active:scale-95 transition-all shadow-sm border border-stone-100"
+              >
+                <div className="w-14 h-14 rounded-full bg-stone-200 group-hover:bg-lime-200 flex items-center justify-center transition-colors">
+                  <span className="material-symbols-outlined text-stone-600 group-hover:text-lime-700 text-2xl">
+                    {scanning ? "hourglass_empty" : "photo_library"}
+                  </span>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs font-bold text-stone-700">Pilih File</p>
+                  <p className="text-[9px] text-stone-400 font-medium">Dari galeri / folder</p>
+                </div>
+              </button>
+            </div>
+          )}
+
           {scanning && (
-            <p className="text-center text-xs text-stone-400 mt-2 animate-pulse">Analyzing with AI...</p>
+            <p className="text-center text-xs text-stone-400 mt-3 animate-pulse">Analyzing with AI...</p>
           )}
           {aiConfidence !== null && !scanning && (
-            <p className="text-center text-xs text-lime-600 font-bold mt-2">AI Confidence: {aiConfidence}%</p>
+            <p className="text-center text-xs text-lime-600 font-bold mt-3">AI Confidence: {aiConfidence}%</p>
           )}
         </div>
       )}
@@ -388,8 +438,8 @@ export default function FoodLogForm({ todayLogs = [] }) {
                 )}
               </div>
 
-              {/* Weight input for manual mode */}
-              {mode === "manual" && entry.name && (
+              {/* Weight input — both modes */}
+              {entry.name && (
                 <div className="flex items-center gap-3 bg-stone-50 rounded-xl px-3 py-2">
                   <span className="material-symbols-outlined text-stone-400 text-sm">scale</span>
                   <input
@@ -420,9 +470,9 @@ export default function FoodLogForm({ todayLogs = [] }) {
                       value={entry[field]}
                       onChange={(e) => updateEntry(idx, field, e.target.value)}
                       placeholder="0"
-                      readOnly={mode === "manual" && !!entry._foodRef}
+                      readOnly={!!entry._foodRef}
                       className={`w-full text-center bg-transparent border-none focus:outline-none font-black text-base ${color || ""} placeholder-stone-300 ${
-                        mode === "manual" && entry._foodRef ? "cursor-default" : ""
+                        entry._foodRef ? "cursor-default" : ""
                       }`}
                     />
                   </div>
