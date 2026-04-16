@@ -61,7 +61,7 @@ export default async function ProfilePage() {
             <img className="w-full h-full object-cover" alt="User profile" src={avatarSrc} />
           </div>
           <span className="text-xl font-black text-stone-900 tracking-widest uppercase">
-            VITALITY
+            FITFAN
           </span>
         </div>
         <button className="w-10 h-10 flex items-center justify-center rounded-full text-stone-500 hover:opacity-80 transition-opacity active:scale-95 duration-200">
@@ -234,7 +234,7 @@ export default async function ProfilePage() {
 
         <footer className="pt-8 pb-12 text-center opacity-20 select-none">
           <span className="text-[0.55rem] font-black tracking-[0.5em] uppercase">
-            VITALITY LUXE EDITION
+            FITFAN LUXE EDITION
           </span>
         </footer>
       </main>

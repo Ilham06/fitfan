@@ -26,7 +26,7 @@ export async function POST(req) {
     prisma.bodyScanLog.findFirst({ where: { userId }, orderBy: { date: "desc" } }),
   ]);
 
-  const systemPrompt = `You are Vitality AI, a premium personal fitness and nutrition assistant specialized in bulking and muscle building. You give personalized advice based on the user's biometrics.
+  const systemPrompt = `You are FitFan AI, a premium personal fitness and nutrition assistant specialized in bulking and muscle building. You give personalized advice based on the user's biometrics.
 
 User profile:
 - Name: ${session.user.name}

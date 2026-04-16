@@ -41,7 +41,7 @@ export default async function AIPage() {
             <img alt="User Profile" className="w-full h-full object-cover" src={avatarSrc} />
           </div>
           <span className="text-xl font-black text-stone-900 tracking-widest font-headline uppercase">
-            Vitality
+            FitFan
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -66,7 +66,7 @@ export default async function AIPage() {
             </div>
             <div>
               <h2 className="font-headline font-bold text-on-primary-container text-xl tracking-tight">
-                Vitality AI
+                FitFan AI
               </h2>
               <p className="text-on-primary-container/60 text-sm">
                 Personalized Nutrition Guide

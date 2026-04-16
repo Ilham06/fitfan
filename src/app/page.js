@@ -96,7 +96,7 @@ export default async function DashboardPage() {
               <img alt="User Profile" className="w-full h-full object-cover" src={avatarSrc} />
             </div>
             <span className="text-xl font-black text-stone-900 tracking-widest uppercase font-['Plus_Jakarta_Sans']">
-              VITALITY
+              FITFAN
             </span>
           </div>
           <div className="flex items-center gap-4">

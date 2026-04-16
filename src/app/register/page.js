@@ -48,7 +48,7 @@ export default function RegisterPage() {
       {/* Logo */}
       <div className="mb-10 text-center">
         <span className="text-3xl font-black text-stone-900 tracking-widest uppercase font-['Plus_Jakarta_Sans']">
-          VITALITY
+          FITFAN
         </span>
         <p className="text-stone-500 text-sm mt-1">AI-Powered Bulking Tracker</p>
       </div>

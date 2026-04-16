@@ -68,7 +68,7 @@ export default async function FoodScanPage() {
             <img alt="Profile" className="w-full h-full object-cover" src={avatarSrc} />
           </div>
           <h1 className="text-xl font-black text-stone-900 tracking-widest uppercase font-['Plus_Jakarta_Sans']">
-            VITALITY
+            FITFAN
           </h1>
           <button className="w-10 h-10 flex items-center justify-center rounded-full hover:opacity-80 transition-opacity">
             <span className="material-symbols-outlined text-stone-500">notifications</span>

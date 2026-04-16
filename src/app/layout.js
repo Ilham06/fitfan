@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Vitality - Bulking Fitness PWA",
+  title: "FitFan - Bulking Fitness PWA",
   description: "Your premium AI-powered bulking & nutrition tracker",
 };
 
