@@ -34,7 +34,7 @@ export default async function BodyScanPage() {
             <img className="w-full h-full object-cover" alt="User Profile" src={avatarSrc} />
           </div>
           <span className="text-xl font-black text-stone-900 tracking-widest font-['Plus_Jakarta_Sans'] uppercase">
-            VITALITY
+            FITFAN
           </span>
         </div>
         <div className="flex items-center gap-2">

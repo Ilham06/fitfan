@@ -1,4 +1,4 @@
-// Vitality Bulking Fitness PWA - Prisma Schema
+// FitFan Bulking Fitness PWA - Prisma Schema
 // Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -198,7 +198,7 @@ model FoodEntry {
 // AI CHAT
 // ============================================================
 
-/// Satu sesi percakapan dengan Vitality AI
+/// Satu sesi percakapan dengan FitFan AI
 model AIConversation {
   id        String      @id @default(cuid())
   userId    String

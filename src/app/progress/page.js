@@ -116,7 +116,7 @@ export default async function ProgressPage() {
           </div>
         </div>
         <h1 className="text-xl font-black text-stone-900 tracking-widest font-['Plus_Jakarta_Sans'] uppercase">
-          VITALITY
+          FITFAN
         </h1>
         <button className="w-10 h-10 flex items-center justify-center rounded-full text-stone-900 hover:opacity-80 transition-opacity active:scale-95 duration-200">
           <span className="material-symbols-outlined">notifications</span>

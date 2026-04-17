@@ -31,7 +31,7 @@ export default function ChatInterface({ userName, phase, calorieTarget }) {
           <div className="flex flex-col items-start max-w-[85%]">
             <div className="bg-surface-container-low px-6 py-5 rounded-[2rem] rounded-bl-none border border-stone-50">
               <p className="text-on-surface/90 leading-relaxed text-sm">
-                Hi {userName}! 👋 I&apos;m your Vitality AI assistant. I know your{" "}
+                Hi {userName}! 👋 I&apos;m your FitFan AI assistant. I know your{" "}
                 <span className="font-bold text-primary">{phase}</span> phase goals and daily
                 target of{" "}
                 <span className="font-bold text-primary">
