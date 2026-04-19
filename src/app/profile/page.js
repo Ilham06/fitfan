@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import BottomNav from "@/components/BottomNav";
 import SignOutButton from "./SignOutButton";
 import EditDailyTargets from "./EditDailyTargets";
+import EditProfileInfo from "./EditProfileInfo";
 
 const PHASE_LABELS = {
   LEAN_BULKING: "Lean Bulking",
@@ -46,6 +47,34 @@ export default async function ProfilePage() {
     currentWeight && goalWeight && profile?.height
       ? Math.min(100, Math.round((currentWeight / goalWeight) * 100))
       : 70;
+
+  const PHASE_PROTEIN = {
+    LEAN_BULKING: 2.0,
+    BULKING: 1.8,
+    CUTTING: 2.2,
+    MAINTENANCE: 1.6,
+  };
+  const PHASE_CAL_PER_KG = {
+    LEAN_BULKING: 38,
+    BULKING: 40,
+    CUTTING: 28,
+    MAINTENANCE: 33,
+  };
+
+  const userWeight = profile?.currentWeight ?? 65;
+  const userPhase = profile?.currentPhase ?? "LEAN_BULKING";
+  const estimatedCal = Math.round(userWeight * PHASE_CAL_PER_KG[userPhase]);
+  const estimatedProtein = Math.round(userWeight * PHASE_PROTEIN[userPhase]);
+  const estimatedFat = Math.round(userWeight * 1.0);
+  const estimatedCarbs = Math.max(100, Math.round((estimatedCal - estimatedProtein * 4 - estimatedFat * 9) / 4));
+
+  const effectiveTarget = {
+    calories: target?.calories ?? estimatedCal,
+    protein: target?.protein ?? estimatedProtein,
+    carbs: target?.carbs ?? estimatedCarbs,
+    fat: target?.fat ?? estimatedFat,
+    fiber: target?.fiber ?? 30,
+  };
 
   const avatarSrc =
     user?.avatarUrl ||
@@ -103,8 +132,15 @@ export default async function ProfilePage() {
                 {PHASE_LABELS[profile?.currentPhase] || "Lean Bulking"}
               </h2>
             </div>
-            <div className="px-3 py-1 bg-lime-50 text-lime-700 text-[0.6rem] font-black rounded-full tracking-widest uppercase">
-              Active
+            <div className="flex items-center gap-2">
+              <div className="px-3 py-1 bg-lime-50 text-lime-700 text-[0.6rem] font-black rounded-full tracking-widest uppercase">
+                Active
+              </div>
+              <EditProfileInfo
+                currentPhase={profile?.currentPhase ?? "LEAN_BULKING"}
+                height={profile?.height ?? null}
+                goalWeight={profile?.goalWeight ?? null}
+              />
             </div>
           </div>
           <div className="space-y-4">
@@ -131,9 +167,9 @@ export default async function ProfilePage() {
         {/* Stats Row */}
         <section className="grid grid-cols-3 gap-8 px-2">
           {[
-            { label: "Height", value: profile?.height ? `${profile.height}` : "—", unit: profile?.height ? "cm" : "" },
+            { label: "Tinggi", value: profile?.height ? `${profile.height}` : "—", unit: profile?.height ? "cm" : "" },
             { label: "Body Fat", value: latestScan?.bodyFatPercent ? `${latestScan.bodyFatPercent.toFixed(1)}` : "—", unit: latestScan?.bodyFatPercent ? "%" : "" },
-            { label: "Streak", value: `${profile?.streak ?? 0}`, unit: "days" },
+            { label: "Streak", value: `${profile?.streak ?? 0}`, unit: "hari" },
           ].map(({ label, value, unit }) => (
             <div key={label} className="text-center space-y-1">
               <span className="text-[0.6rem] font-bold text-stone-400 tracking-[0.15em] uppercase">
@@ -150,8 +186,15 @@ export default async function ProfilePage() {
         {/* Daily Targets */}
         <section className="space-y-8">
           <div className="flex items-center justify-between px-2">
-            <h3 className="text-xl font-extrabold tracking-tight">Daily Targets</h3>
-            <EditDailyTargets target={target} />
+            <div>
+              <h3 className="text-xl font-extrabold tracking-tight">Daily Targets</h3>
+              {!target && (
+                <p className="text-[10px] text-stone-400 font-medium mt-0.5">
+                  Estimasi dari BB {userWeight}kg &middot; {PHASE_LABELS[userPhase]}
+                </p>
+              )}
+            </div>
+            <EditDailyTargets target={target} estimatedTarget={effectiveTarget} />
           </div>
           <div className="space-y-4">
             <div className="lux-card p-6 rounded-2xl border border-stone-100 flex justify-between items-center">
@@ -159,11 +202,11 @@ export default async function ProfilePage() {
                 <div className="w-10 h-10 rounded-full bg-stone-50 flex items-center justify-center text-stone-900">
                   <span className="material-symbols-outlined">local_fire_department</span>
                 </div>
-                <span className="font-bold text-stone-900">Energy Intake</span>
+                <span className="font-bold text-stone-900">Kalori</span>
               </div>
               <div className="text-right">
                 <span className="text-xl font-black text-stone-900">
-                  {target?.calories?.toLocaleString() ?? "3,200"}
+                  {effectiveTarget.calories.toLocaleString()}
                 </span>
                 <span className="text-[10px] font-bold text-stone-400 uppercase ml-0.5 tracking-tighter">
                   kcal
@@ -171,34 +214,27 @@ export default async function ProfilePage() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="lux-card p-6 rounded-2xl border border-stone-100 space-y-3">
-                <span className="text-[0.6rem] font-bold text-stone-400 tracking-[0.15em] uppercase">
-                  Protein
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-stone-900">
-                    {target?.protein?.toFixed(0) ?? "185"}
+              {[
+                { label: "Protein", value: Math.round(effectiveTarget.protein), unit: "g", color: "bg-sky-500" },
+                { label: "Karbo", value: Math.round(effectiveTarget.carbs), unit: "g", color: "bg-amber-400" },
+                { label: "Lemak", value: Math.round(effectiveTarget.fat), unit: "g", color: "bg-rose-400" },
+                { label: "Serat", value: Math.round(effectiveTarget.fiber), unit: "g", color: "bg-emerald-500" },
+              ].map(({ label, value, unit, color }) => (
+                <div key={label} className="lux-card p-6 rounded-2xl border border-stone-100 space-y-3">
+                  <span className="text-[0.6rem] font-bold text-stone-400 tracking-[0.15em] uppercase">
+                    {label}
                   </span>
-                  <span className="text-xs font-bold text-stone-400">g</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-black text-stone-900">
+                      {value}
+                    </span>
+                    <span className="text-xs font-bold text-stone-400">{unit}</span>
+                  </div>
+                  <div className="w-full bg-stone-50 h-1 rounded-full overflow-hidden">
+                    <div className={`${color} h-full rounded-full`} style={{ width: "100%" }} />
+                  </div>
                 </div>
-                <div className="w-full bg-stone-50 h-1 rounded-full overflow-hidden">
-                  <div className="bg-lime-700 h-full w-[80%] rounded-full"></div>
-                </div>
-              </div>
-              <div className="lux-card p-6 rounded-2xl border border-stone-100 space-y-3">
-                <span className="text-[0.6rem] font-bold text-stone-400 tracking-[0.15em] uppercase">
-                  Carbs
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-stone-900">
-                    {target?.carbs?.toFixed(0) ?? "420"}
-                  </span>
-                  <span className="text-xs font-bold text-stone-400">g</span>
-                </div>
-                <div className="w-full bg-stone-50 h-1 rounded-full overflow-hidden">
-                  <div className="bg-stone-300 h-full w-[65%] rounded-full"></div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>

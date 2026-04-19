@@ -33,6 +33,26 @@ export async function updateProfile(formData) {
   });
 }
 
+export async function updateProfileInfo({ currentPhase, height, goalWeight }) {
+  const session = await getSession();
+  const userId = session.user.id;
+
+  await prisma.userProfile.upsert({
+    where: { userId },
+    update: {
+      currentPhase: currentPhase || "LEAN_BULKING",
+      height: height ?? undefined,
+      goalWeight: goalWeight ?? undefined,
+    },
+    create: {
+      userId,
+      currentPhase: currentPhase || "LEAN_BULKING",
+      height,
+      goalWeight,
+    },
+  });
+}
+
 export async function updateDailyTarget(formData) {
   const session = await getSession();
   const userId = session.user.id;

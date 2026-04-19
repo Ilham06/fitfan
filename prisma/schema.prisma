@@ -61,9 +61,11 @@ model User {
   dailyTarget     DailyTarget?
   bodyScanLogs    BodyScanLog[]
   foodLogs        FoodLog[]
-  aiConversations AIConversation[]
-  sessions        Session[]
-  accounts        Account[]
+  aiConversations   AIConversation[]
+  pushSubscriptions PushSubscription[]
+  notifications     Notification[]
+  sessions          Session[]
+  accounts          Account[]
 }
 
 // ============================================================
@@ -217,6 +219,44 @@ model AIMessage {
   content         String               @db.Text
   recommendations MealRecommendation[]
   createdAt       DateTime             @default(now())
+}
+
+// ============================================================
+// PUSH NOTIFICATIONS
+// ============================================================
+
+enum NotificationType {
+  REMINDER_MEAL
+  REMINDER_SCAN
+  NUTRITION_GOAL
+  SYSTEM
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fcmToken  String   @unique
+  device    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType @default(SYSTEM)
+  title     String
+  body      String
+  data      Json?
+  read      Boolean          @default(false)
+  sentAt    DateTime         @default(now())
+  readAt    DateTime?
+
+  @@index([userId, sentAt])
 }
 
 /// Rekomendasi meal yang disematkan dalam pesan AI

@@ -134,19 +134,6 @@ export default async function ProgressPage() {
           </h2>
         </section>
 
-        {/* Time Filter Chips — static for now */}
-        <nav className="flex gap-2 p-1.5 bg-stone-100/80 rounded-2xl w-fit">
-          <button className="px-6 py-2 rounded-xl bg-white text-stone-900 font-label text-xs font-bold tracking-wide shadow-sm transition-all active:scale-95">
-            Weekly
-          </button>
-          <button className="px-6 py-2 rounded-xl text-stone-500 font-label text-xs font-bold tracking-wide hover:text-stone-900 transition-all active:scale-95">
-            Monthly
-          </button>
-          <button className="px-6 py-2 rounded-xl text-stone-500 font-label text-xs font-bold tracking-wide hover:text-stone-900 transition-all active:scale-95">
-            Annual
-          </button>
-        </nav>
-
         {/* Weight Chart */}
         <div className="bg-white rounded-[2rem] p-8 space-y-8 border border-stone-100 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
           <div className="flex justify-between items-start">

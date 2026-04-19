@@ -63,11 +63,31 @@ export default async function DashboardPage() {
     { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, omega3: 0, iron: 0 }
   );
 
-  const calTarget = target?.calories ?? 3200;
-  const proteinTarget = target?.protein ?? 185;
-  const carbsTarget = target?.carbs ?? 420;
-  const fatTarget = target?.fat ?? 80;
-  const fiberTarget = target?.fiber ?? 35;
+  const PHASE_PROTEIN = {
+    LEAN_BULKING: 2.0,
+    BULKING: 1.8,
+    CUTTING: 2.2,
+    MAINTENANCE: 1.6,
+  };
+  const PHASE_CAL_PER_KG = {
+    LEAN_BULKING: 38,
+    BULKING: 40,
+    CUTTING: 28,
+    MAINTENANCE: 33,
+  };
+
+  const userWeight = profile?.currentWeight ?? 65;
+  const userPhase = profile?.currentPhase ?? "LEAN_BULKING";
+  const estimatedCal = Math.round(userWeight * PHASE_CAL_PER_KG[userPhase]);
+  const estimatedProtein = Math.round(userWeight * PHASE_PROTEIN[userPhase]);
+  const estimatedFat = Math.round(userWeight * 1.0);
+  const estimatedCarbs = Math.round((estimatedCal - estimatedProtein * 4 - estimatedFat * 9) / 4);
+
+  const calTarget = target?.calories ?? estimatedCal;
+  const proteinTarget = target?.protein ?? estimatedProtein;
+  const carbsTarget = target?.carbs ?? Math.max(estimatedCarbs, 100);
+  const fatTarget = target?.fat ?? estimatedFat;
+  const fiberTarget = target?.fiber ?? 30;
 
   const calRemaining = Math.max(0, calTarget - totalConsumed.calories);
   const proteinPct = Math.min(100, (totalConsumed.protein / proteinTarget) * 100);
@@ -108,7 +128,98 @@ export default async function DashboardPage() {
       </header>
 
       <main className="pt-24 px-6 max-w-2xl mx-auto space-y-12">
-        {/* Hero: Nutrition Summary */}
+        {/* Daily Needs & Progress */}
+        {(() => {
+          const nutrients = [
+            { key: "calories", label: "Kalori", consumed: Math.round(totalConsumed.calories), target: calTarget, unit: "kcal", color: "bg-lime-500", ring: "text-lime-500" },
+            { key: "protein", label: "Protein", consumed: Math.round(totalConsumed.protein), target: proteinTarget, unit: "g", color: "bg-sky-500", ring: "text-sky-500" },
+            { key: "carbs", label: "Karbo", consumed: Math.round(totalConsumed.carbs), target: carbsTarget, unit: "g", color: "bg-amber-400", ring: "text-amber-400" },
+            { key: "fat", label: "Lemak", consumed: Math.round(totalConsumed.fat), target: fatTarget, unit: "g", color: "bg-rose-400", ring: "text-rose-400" },
+            { key: "fiber", label: "Serat", consumed: Math.round(totalConsumed.fiber), target: fiberTarget, unit: "g", color: "bg-emerald-500", ring: "text-emerald-500" },
+          ];
+          const fulfilledCount = nutrients.filter(n => n.consumed >= n.target).length;
+          const allFulfilled = fulfilledCount === nutrients.length;
+
+          return (
+            <section className="space-y-5">
+              <div className="flex items-center justify-between px-1">
+                <div>
+                  <h2 className="text-sm font-headline font-extrabold text-stone-900 uppercase tracking-[0.2em]">
+                    Kebutuhan Harian
+                  </h2>
+                  <p className="text-[10px] font-label font-medium text-stone-400 mt-0.5">
+                    {allFulfilled
+                      ? "Semua kebutuhan terpenuhi hari ini!"
+                      : `${fulfilledCount} dari ${nutrients.length} nutrisi tercukupi`}
+                  </p>
+                </div>
+                <div className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${allFulfilled ? "bg-lime-100 text-lime-700" : "bg-amber-50 text-amber-600"}`}>
+                  {allFulfilled ? "Tercukupi" : "Belum Cukup"}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[2rem] p-6 ultra-soft-shadow divide-y divide-stone-50">
+                {nutrients.map((n) => {
+                  const pct = Math.min(100, n.target > 0 ? (n.consumed / n.target) * 100 : 0);
+                  const isFulfilled = n.consumed >= n.target;
+                  const remaining = Math.max(0, n.target - n.consumed);
+
+                  return (
+                    <div key={n.key} className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0">
+                      {/* Circular mini indicator */}
+                      <div className="relative flex-shrink-0 w-11 h-11">
+                        <svg className="w-11 h-11 -rotate-90" viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="3" className="text-stone-100" />
+                          <circle
+                            cx="18" cy="18" r="15" fill="none" strokeWidth="3" strokeLinecap="round"
+                            stroke="currentColor"
+                            className={n.ring}
+                            strokeDasharray={`${pct * 0.942} 100`}
+                          />
+                        </svg>
+                        {isFulfilled && (
+                          <span className="material-symbols-outlined absolute inset-0 flex items-center justify-center text-lime-600 text-sm font-bold">
+                            check
+                          </span>
+                        )}
+                        {!isFulfilled && (
+                          <span className="absolute inset-0 flex items-center justify-center text-[9px] font-headline font-bold text-stone-500">
+                            {Math.round(pct)}%
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline justify-between mb-1.5">
+                          <span className="font-headline font-bold text-xs text-stone-800 uppercase tracking-wider">
+                            {n.label}
+                          </span>
+                          <span className="text-[10px] font-label font-bold text-stone-400 tabular-nums">
+                            {n.consumed} / {n.target}{n.unit}
+                          </span>
+                        </div>
+                        <div className="w-full bg-stone-100 h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className={`${n.color} h-full rounded-full transition-all duration-500`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <p className="text-[9px] font-label text-stone-400 mt-1">
+                          {isFulfilled
+                            ? `Terpenuhi (+${n.consumed - n.target}${n.unit} lebih)`
+                            : `Kurang ${remaining}${n.unit} lagi`}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })()}
+
+        {/* Hero: Calories Remaining */}
         <section className="bg-white rounded-[2rem] p-8 ultra-soft-shadow">
           <div className="flex justify-between items-start mb-2">
             <p className="font-label text-[10px] font-bold tracking-[0.15em] uppercase text-stone-400">

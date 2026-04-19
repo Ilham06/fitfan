@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { updateDailyTarget } from "./actions";
 
-export default function EditDailyTargets({ target }) {
+export default function EditDailyTargets({ target, estimatedTarget }) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const formRef = useRef(null);
@@ -34,11 +34,11 @@ export default function EditDailyTargets({ target }) {
             <h3 className="text-lg font-extrabold text-stone-900 mb-6">Edit Daily Targets</h3>
             <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-4">
               {[
-                { name: "calories", label: "Calories (kcal)", defaultValue: target?.calories ?? 3200, type: "number" },
-                { name: "protein", label: "Protein (g)", defaultValue: target?.protein ?? 185, type: "number", step: "0.1" },
-                { name: "carbs", label: "Carbs (g)", defaultValue: target?.carbs ?? 420, type: "number", step: "0.1" },
-                { name: "fat", label: "Fat (g)", defaultValue: target?.fat ?? 80, type: "number", step: "0.1" },
-                { name: "fiber", label: "Fiber (g) — optional", defaultValue: target?.fiber ?? "", type: "number", step: "0.1", required: false },
+                { name: "calories", label: "Kalori (kcal)", defaultValue: target?.calories ?? estimatedTarget?.calories ?? 2200, type: "number" },
+                { name: "protein", label: "Protein (g)", defaultValue: target?.protein ?? estimatedTarget?.protein ?? 120, type: "number", step: "0.1" },
+                { name: "carbs", label: "Karbo (g)", defaultValue: target?.carbs ?? estimatedTarget?.carbs ?? 250, type: "number", step: "0.1" },
+                { name: "fat", label: "Lemak (g)", defaultValue: target?.fat ?? estimatedTarget?.fat ?? 65, type: "number", step: "0.1" },
+                { name: "fiber", label: "Serat (g) — opsional", defaultValue: target?.fiber ?? estimatedTarget?.fiber ?? "", type: "number", step: "0.1", required: false },
               ].map((field) => (
                 <div key={field.name}>
                   <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1 block">
